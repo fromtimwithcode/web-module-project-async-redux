@@ -1,4 +1,7 @@
 import { connect } from 'react-redux';
+import { useEffect } from 'react';
+import { fetchStart, fetchSuccess, fetchFail } from './actions/index';
+import axios from 'axios';
 import './App.css';
 
 import data from './data';
@@ -6,7 +9,18 @@ import GifList from './components/GifList';
 import GifForm from './components/GifForm';
 
 function App(props) {
-  const { loading, gifs, error } = props;
+  const { loading, error, fetchStart, fetchSuccess, fetchFail } = props;
+
+  useEffect(() => {
+    fetchStart();
+    axios.get(`https://api.giphy.com/v1/gifs/search?api_key=rkfXfbFIpvUmH7shbEXLLbrJLoKpbTgj&q=cats&limit=10&offset=0&rating=g&lang=en`)
+      .then(res => {
+        fetchSuccess(res.data.data);
+      })
+      .catch(err => {
+        fetchFail(err.meta.msg);
+      })
+  }, []);
 
   return (
     <div className="App">
@@ -16,7 +30,7 @@ function App(props) {
         (error !== "") && <h3>{error}</h3>
       }
       {
-        loading ? <h3>Loading...</h3> : <GifList gifs={gifs} />
+        loading ? <h3>Loading...</h3> : <GifList />
       }
     </div>
   );
@@ -24,10 +38,17 @@ function App(props) {
 
 const mapStateToProps = state => {
   return {
-    gifs: state.gifs,
     loading: state.loading,
     error: state.error
   }
 }
 
-export default connect(mapStateToProps)(App);
+const mapActionsToProps = () => {
+  return {
+    fetchStart,
+    fetchSuccess,
+    fetchFail
+  }
+}
+
+export default connect(mapStateToProps, mapActionsToProps())(App);
